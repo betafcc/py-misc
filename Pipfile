@@ -9,6 +9,7 @@ jupyterlab = "*"
 aiohttp = "*"
 "flake8" = "*"
 mypy = "*"
+tornado = "<5"
 
 [dev-packages]
 
