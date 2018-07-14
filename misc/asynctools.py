@@ -17,3 +17,17 @@ async def resolve(awaitable_or_not):
     if isinstance(awaitable_or_not, Awaitable):
         return await awaitable_or_not
     return awaitable_or_not
+
+
+def agnostic(f):
+    @wraps(f)
+    def _agnostic(*args, **kwargs):
+        result = f(*args, **kwargs)
+        if not isinstance(result, Awaitable):
+            return result
+        try:
+            asyncio.get_running_loop()
+            return result
+        except RuntimeError:
+            return asyncio.run(result)
+    return _agnostic
