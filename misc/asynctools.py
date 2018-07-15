@@ -34,15 +34,19 @@ def agnostic(f):
 
 
 class AsyncQueue:
-    def __init__(self):
-        self._done = asyncio.Queue()
+    def __init__(self, *args, loop=None, **kwargs):
+        if loop is None:
+            self._loop = asyncio.get_event_loop()
+        else:
+            self._loop = loop
+        self._done = asyncio.Queue(*args, loop=loop, **kwargs)
 
     def submit(self, f, *args, **kwargs):
         async def _():
             result = await f(*args, **kwargs)
             await self._done.put(result)
             return result
-        return asyncio.create_task(_())
+        return self._loop.create_task(_())
 
     def get_done(self):
         return self._done.get()
