@@ -31,3 +31,18 @@ def agnostic(f):
         except RuntimeError:
             return asyncio.run(result)
     return _agnostic
+
+
+class AsyncQueue:
+    def __init__(self):
+        self._done = asyncio.Queue()
+
+    def submit(self, f, *args, **kwargs):
+        async def _():
+            result = await f(*args, **kwargs)
+            await self._done.put(result)
+            return result
+        return asyncio.create_task(_())
+
+    def get_done(self):
+        return self._done.get()
