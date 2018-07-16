@@ -50,3 +50,12 @@ class AsyncQueue:
 
     def get_done(self):
         return self._done.get()
+
+
+async def as_completed_map(f, it):
+    _ = map(f, it)
+    _ = map(asyncio.ensure_future, _)
+    _ = asyncio.as_completed(list(_))
+
+    for completed in _:
+        yield await completed
