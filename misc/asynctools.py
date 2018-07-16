@@ -52,9 +52,12 @@ class AsyncQueue:
         return self._done.get()
 
 
-async def as_completed_map(f, it):
-    _ = map(f, it)
-    _ = map(asyncio.ensure_future, _)
+async def as_completed_map(f, *its, loop=None):
+    if loop is None:
+        loop = asyncio.get_event_loop()
+
+    _ = map(f, *its)
+    _ = map(loop.create_task, _)
     _ = asyncio.as_completed(list(_))
 
     for completed in _:
