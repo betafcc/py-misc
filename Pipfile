@@ -10,6 +10,7 @@ aiohttp = "*"
 "flake8" = "*"
 mypy = "*"
 tornado = "<5"
+tqdm = "*"
 
 [dev-packages]
 
