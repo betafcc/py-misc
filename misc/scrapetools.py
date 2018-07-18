@@ -16,8 +16,12 @@ async def get(urls, *args, **kwargs):
 
 async def get_one(*args, session=None, **kwargs):
     if session is None:
-        async with aiohttp.ClientSession() as session:
+        session = {}
+
+    if isinstance(session, dict):
+        async with aiohttp.ClientSession(**session) as session:
             return await get_one(*args, session=session, **kwargs)
+
     async with session.get(*args, **kwargs) as response:
         try:
             response.body = await response.read()
@@ -36,9 +40,15 @@ async def get_all(urls,
                   **kwargs,
                   ):
     if session is None:
-        _len = len(urls)
-        connector = aiohttp.TCPConnector(limit=_len, limit_per_host=_len)
-        async with aiohttp.ClientSession(connector=connector) as session:
+        session = {}
+
+    if isinstance(session, dict):
+        if 'connector' not in session:
+            _len = len(urls)
+            connector = aiohttp.TCPConnector(limit=_len, limit_per_host=_len)
+            session = {'connector': connector, **session}
+
+        async with aiohttp.ClientSession(**session) as session:
             return await get_all(
                 urls,
                 *args,
