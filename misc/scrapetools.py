@@ -3,8 +3,22 @@ from collections.abc import Iterable
 
 import tqdm
 import aiohttp
+from parsel import Selector
 
 from .asynctools import agnostic
+
+
+@agnostic
+async def scrape(url, *args, **kwargs):
+    if 'session' not in kwargs:
+        kwargs.update(session={'raise_for_status': True})
+
+    r = await get_one(url, *args, **kwargs)
+
+    return Selector(
+        r.body.decode(r.charset),
+        base_url=url,
+    )
 
 
 @agnostic
