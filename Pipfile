@@ -11,6 +11,7 @@ aiohttp = "*"
 mypy = "*"
 tornado = "<5"
 tqdm = "*"
+parsel = "*"
 
 [dev-packages]
 
