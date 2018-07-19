@@ -1,5 +1,7 @@
 import asyncio
+from queue import Queue
 from functools import wraps
+from threading import Thread
 from collections.abc import Awaitable
 
 
@@ -62,3 +64,34 @@ async def as_completed_map(f, *its, loop=None):
 
     for completed in _:
         yield await completed
+
+
+class aiter_to_iter:
+    def __init__(self, it):
+        self._it = it
+        self._queue = Queue()
+
+    def __iter__(self):
+        t = Thread(target=self._worker)
+        t.start()
+        while True:
+            done, value = self._queue.get()
+            if done:
+                break
+            yield value
+
+        if value is not None:
+            raise value
+
+        t.join()
+
+    def _worker(self):
+        async def enqueue_iter():
+            try:
+                async for el in self._it:
+                    self._queue.put((False, el))
+                self._queue.put((True, None))
+            except Exception as e:
+                self._queue.put((True, e))
+
+        asyncio.run(enqueue_iter())
