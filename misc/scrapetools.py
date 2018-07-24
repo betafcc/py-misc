@@ -1,5 +1,4 @@
 import asyncio
-from collections.abc import Iterable
 
 import tqdm
 import aiohttp
@@ -10,20 +9,25 @@ from .asynctools import agnostic
 
 @agnostic
 async def scrape(url, *args, **kwargs):
-    if 'session' not in kwargs:
-        kwargs.update(session={'raise_for_status': True})
+    if isinstance(url, str) and url.startswith('http'):
+        if 'session' not in kwargs:
+            kwargs.update(session={'raise_for_status': True})
 
-    r = await get_one(url, *args, **kwargs)
+        response = await get_one(url, *args, **kwargs)
+        html = response.body.decode(response.charset)
 
-    return Selector(
-        r.body.decode(r.charset),
-        base_url=url,
-    )
+        return Selector(text=html, base_url=url)
+
+    else:
+        try:
+            return Selector(text=url)
+        except TypeError:
+            return Selector(text=url.body.decode(url.charset))
 
 
 @agnostic
 async def get(urls, *args, **kwargs):
-    if not isinstance(urls, Iterable):
+    if isinstance(urls, str):
         return await get_one(urls, *args, **kwargs)
     return await get_all(urls, *args, **kwargs)
 
