@@ -59,6 +59,35 @@ class AsyncQueue:
         else:
             self._loop = loop
         self._done = asyncio.Queue(*args, loop=loop, **kwargs)
+        self._tasks = set()
+
+    async def __aiter__(self):
+        while True:
+            close, value = await self._done.get()
+            if close:
+                break
+            yield value
+
+    def submit_close(self, wait=True):
+        return self._loop.create_task(self._close(wait=wait))
+
+    async def _close(self, wait=True):
+        if wait:
+            await self.wait_submitted()
+        return await self.close_soon()
+
+    async def wait_submitted(self):
+        return await asyncio.gather(*self._tasks)
+
+    def close_soon(self):
+        return self._loop.create_task(self._done.put((True, None)))
+
+    async def get_done(self):
+        close, value = await self._done.get()
+        return value
+
+    async def _put_done(self, value):
+        await self._done.put((False, value))
 
     def submit(self, f, *args, **kwargs):
         return self.submit_awaitable(f(*args, **kwargs))
@@ -67,14 +96,18 @@ class AsyncQueue:
         return self.submit(flatten(f), *args, **kwargs)
 
     def submit_awaitable(self, awaitable):
-        async def _():
-            result = await awaitable
-            await self._done.put(result)
-            return result
-        return self._loop.create_task(_())
+        return self._register_as_task(self._wrap_awaitable(awaitable))
 
-    def get_done(self):
-        return self._done.get()
+    async def _wrap_awaitable(self, awaitable):
+        result = await awaitable
+        await self._put_done(result)
+        return result
+
+    def _register_as_task(self, awaitable):
+        task = self._loop.create_task(awaitable)
+        self._tasks.add(task)
+        task.add_done_callback(lambda _: self._tasks.remove(task))
+        return task
 
 
 async def as_completed_map(f, *its, loop=None):
