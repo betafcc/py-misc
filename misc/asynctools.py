@@ -35,6 +35,19 @@ def agnostic(f):
     return _agnostic
 
 
+def flatten(f):
+    @wraps(f)
+    def _flatten(*args, **kwargs):
+        return flat(f(*args, **kwargs))
+    return _flatten
+
+
+async def flat(coro):
+    while isinstance(coro, Awaitable):
+        coro = await coro
+    return coro
+
+
 class AsyncQueue:
     def __init__(self, *args, loop=None, **kwargs):
         if loop is None:
