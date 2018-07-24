@@ -57,8 +57,14 @@ class AsyncQueue:
         self._done = asyncio.Queue(*args, loop=loop, **kwargs)
 
     def submit(self, f, *args, **kwargs):
+        return self.submit_awaitable(f(*args, **kwargs))
+
+    def submit_flatten(self, f, *args, **kwargs):
+        return self.submit(flatten(f), *args, **kwargs)
+
+    def submit_awaitable(self, awaitable):
         async def _():
-            result = await f(*args, **kwargs)
+            result = await awaitable
             await self._done.put(result)
             return result
         return self._loop.create_task(_())
