@@ -15,12 +15,6 @@ def sync(f, loop=None):
     return _sync
 
 
-async def resolve(awaitable_or_not):
-    if isinstance(awaitable_or_not, Awaitable):
-        return await awaitable_or_not
-    return awaitable_or_not
-
-
 def agnostic(f):
     @wraps(f)
     def _agnostic(*args, **kwargs):
@@ -46,6 +40,16 @@ async def flat(coro):
     while isinstance(coro, Awaitable):
         coro = await coro
     return coro
+
+
+async def resolve(awaitable_or_not):
+    if isinstance(awaitable_or_not, Awaitable):
+        return await awaitable_or_not
+    return awaitable_or_not
+
+
+async def then(f, coro):
+    return await flatten(f)(await flat(coro))
 
 
 class AsyncQueue:
