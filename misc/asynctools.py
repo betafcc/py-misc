@@ -62,18 +62,46 @@ class AsCompleted:
             self._timeout_handle = loop.call_later(timeout, self._on_timeout)
         self._to_get = 0
 
-    def get_done(self):
+    def qsize(self):
+        return self._to_get
+
+    def get_nowait(self):
         if not self._to_get:
             raise asyncio.QueueEmpty('No more futures to give')
         else:
             self._to_get -= 1
             return self._wait_for_one()
 
-    def submit_awaitable(self, awaitable):
+    def put_nowait(self, awaitable):
         task = self._loop.create_task(awaitable)
         self._todo.add(task)
         task.add_done_callback(self._on_completion)
         self._to_get += 1
+
+    def get_all_nowait(self):
+        acc = []
+        while True:
+            try:
+                acc.append(self.get_nowait())
+            except asyncio.QueueEmpty:
+                break
+        return acc
+
+    def iter_until_empty(self):
+        for coro in self.get_until_empty():
+            yield self._loop.run_until_complete(coro)
+
+    async def aiter_until_empty(self):
+        for coro in self.get_until_empty():
+            yield await coro
+
+    def get_until_empty(self):
+        while True:
+            try:
+                coro = self.get_nowait()
+            except asyncio.QueueEmpty:
+                break
+            yield coro
 
     def _on_timeout(self):
         for f in self._todo:
