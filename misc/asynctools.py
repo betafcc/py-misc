@@ -123,7 +123,11 @@ async def as_completed_map(f, *its, loop=None):
 
 
 class aiter_to_iter:
-    def __init__(self, it):
+    def __init__(self, it, loop=None):
+        if loop is None:
+            self._loop = asyncio.get_event_loop()
+        else:
+            self._loop = loop
         self._it = it
         self._queue = Queue()
 
@@ -142,12 +146,12 @@ class aiter_to_iter:
         t.join()
 
     def _worker(self):
-        async def enqueue_iter():
-            try:
-                async for el in self._it:
-                    self._queue.put((False, el))
-                self._queue.put((True, None))
-            except Exception as e:
-                self._queue.put((True, e))
+        self._loop.run_until_complete(self._enqueue_each_done())
 
-        asyncio.run(enqueue_iter())
+    async def _enqueue_each_done(self):
+        try:
+            async for el in self._it:
+                self._queue.put((False, el))
+            self._queue.put((True, None))
+        except Exception as e:
+            self._queue.put((True, e))
