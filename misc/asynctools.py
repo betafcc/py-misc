@@ -72,12 +72,6 @@ class AsCompletedQueue:
             self._qsize -= 1
             return self._wait_for_one()
 
-    def put_nowait(self, awaitable):
-        task = self._loop.create_task(awaitable)
-        self._todo.add(task)
-        task.add_done_callback(self._on_completion)
-        self._qsize += 1
-
     def get_all_nowait(self):
         acc = []
         while True:
@@ -86,6 +80,18 @@ class AsCompletedQueue:
             except asyncio.QueueEmpty:
                 break
         return acc
+
+    def put_nowait(self, awaitable):
+        task = self._loop.create_task(awaitable)
+        self._todo.add(task)
+        task.add_done_callback(self._on_completion)
+        self._qsize += 1
+
+    def submit(self, f, *args, **kwargs):
+        self.put_nowait(f(*args, **kwargs))
+
+    def submit_flatten(self, f, *args, **kwargs):
+        self.submit(flatten(f), *args, **kwargs)
 
     def iter_until_empty(self):
         for coro in self.get_until_empty():
