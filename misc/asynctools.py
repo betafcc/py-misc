@@ -52,62 +52,49 @@ async def then(f, coro):
     return await flatten(f)(await flat(coro))
 
 
-class AsyncQueue:
-    def __init__(self, *args, loop=None, **kwargs):
-        if loop is None:
-            self._loop = asyncio.get_event_loop()
+class AsCompleted:
+    def __init__(self, *, loop=None, timeout=None):
+        self._loop = loop if loop is not None else asyncio.get_event_loop()
+        self._todo = set()
+        self._done = asyncio.Queue(loop=self._loop)
+        self._timeout_handle = None
+        if timeout is not None:
+            self._timeout_handle = loop.call_later(timeout, self._on_timeout)
+        self._to_get = 0
+
+    def get_done(self):
+        if not self._to_get:
+            raise asyncio.QueueEmpty('No more futures to give')
         else:
-            self._loop = loop
-        self._done = asyncio.Queue(*args, loop=loop, **kwargs)
-        self._tasks = set()
-
-    async def __aiter__(self):
-        while True:
-            close, value = await self._done.get()
-            if close:
-                break
-            yield value
-
-    def submit_close(self, wait=True):
-        return self._loop.create_task(self._close(wait=wait))
-
-    async def _close(self, wait=True):
-        if wait:
-            await self.wait_submitted()
-        return await self.close_soon()
-
-    async def wait_submitted(self):
-        return await asyncio.gather(*self._tasks)
-
-    def close_soon(self):
-        return self._loop.create_task(self._done.put((True, None)))
-
-    async def get_done(self):
-        close, value = await self._done.get()
-        return value
-
-    async def _put_done(self, value):
-        await self._done.put((False, value))
-
-    def submit(self, f, *args, **kwargs):
-        return self.submit_awaitable(f(*args, **kwargs))
-
-    def submit_flatten(self, f, *args, **kwargs):
-        return self.submit(flatten(f), *args, **kwargs)
+            self._to_get -= 1
+            return self._wait_for_one()
 
     def submit_awaitable(self, awaitable):
-        return self._register_as_task(self._wrap_awaitable(awaitable))
-
-    async def _wrap_awaitable(self, awaitable):
-        result = await awaitable
-        await self._put_done(result)
-        return result
-
-    def _register_as_task(self, awaitable):
         task = self._loop.create_task(awaitable)
-        self._tasks.add(task)
-        task.add_done_callback(lambda _: self._tasks.remove(task))
-        return task
+        self._todo.add(task)
+        task.add_done_callback(self._on_completion)
+        self._to_get += 1
+
+    def _on_timeout(self):
+        for f in self._todo:
+            f.remove_done_callback(self._on_completion)
+            self._done.put_nowait(None)
+        self._todo.clear()
+        self._to_get = 0
+
+    def _on_completion(self, f):
+        if not self._todo:
+            return
+        self._todo.remove(f)
+        self._done.put_nowait(f)
+        if not self._todo and self._timeout_handle is not None:
+            self._timeout_handle.cancel()
+
+    async def _wait_for_one(self):
+        f = await self._done.get()
+        if f is None:
+            raise asyncio.futures.TimeoutError
+        return f.result()
 
 
 async def as_completed_map(f, *its, loop=None):
