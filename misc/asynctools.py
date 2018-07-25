@@ -52,7 +52,7 @@ async def then(f, coro):
     return await flatten(f)(await flat(coro))
 
 
-class AsCompleted:
+class AsCompletedQueue:
     def __init__(self, *, loop=None, timeout=None):
         self._loop = loop if loop is not None else asyncio.get_event_loop()
         self._todo = set()
@@ -60,23 +60,23 @@ class AsCompleted:
         self._timeout_handle = None
         if timeout is not None:
             self._timeout_handle = loop.call_later(timeout, self._on_timeout)
-        self._to_get = 0
+        self._qsize = 0
 
     def qsize(self):
-        return self._to_get
+        return self._qsize
 
     def get_nowait(self):
-        if not self._to_get:
+        if not self._qsize:
             raise asyncio.QueueEmpty('No more futures to give')
         else:
-            self._to_get -= 1
+            self._qsize -= 1
             return self._wait_for_one()
 
     def put_nowait(self, awaitable):
         task = self._loop.create_task(awaitable)
         self._todo.add(task)
         task.add_done_callback(self._on_completion)
-        self._to_get += 1
+        self._qsize += 1
 
     def get_all_nowait(self):
         acc = []
@@ -108,7 +108,7 @@ class AsCompleted:
             f.remove_done_callback(self._on_completion)
             self._done.put_nowait(None)
         self._todo.clear()
-        self._to_get = 0
+        self._qsize = 0
 
     def _on_completion(self, f):
         if not self._todo:
