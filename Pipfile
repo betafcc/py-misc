@@ -12,6 +12,7 @@ mypy = "*"
 tornado = "<5"
 tqdm = "*"
 parsel = "*"
+toolz = "*"
 
 [dev-packages]
 
