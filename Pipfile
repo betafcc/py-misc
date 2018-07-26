@@ -17,6 +17,7 @@ fake-useragent = "*"
 python-dateutil = "*"
 dateparser = "*"
 aiodns = "*"
+ipywidgets = "*"
 
 [dev-packages]
 
