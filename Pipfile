@@ -16,6 +16,7 @@ toolz = "*"
 fake-useragent = "*"
 python-dateutil = "*"
 dateparser = "*"
+aiodns = "*"
 
 [dev-packages]
 

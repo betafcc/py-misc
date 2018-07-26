@@ -2,6 +2,7 @@ import asyncio
 
 import tqdm
 import aiohttp
+import dateparser
 from parsel import Selector
 
 from .asynctools import agnostic
@@ -107,5 +108,18 @@ async def get_proxies():
     trs = document.css('#proxylisttable tr')[1:-1]
     for tr in trs:
         tds = (td.css('::text').extract_first() for td in tr.css('td'))
-        acc.append(dict(zip(keys, tds)))
+        d = dict(zip(keys, tds))
+
+        d['google'] = _try(lambda: y_n[d['google']])
+        d['https'] = _try(lambda: y_n[d['https']])
+        d['last_checked'] = _try(lambda: dateparser.parse(d['last_checked']))
+
+        acc.append(d)
     return acc
+
+
+def _try(f, default=None):
+    try:
+        return f()
+    except Exception:
+        return default
