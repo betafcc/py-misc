@@ -1,4 +1,6 @@
 import asyncio
+import collections.abc
+from itertools import cycle
 from types import SimpleNamespace
 
 import tqdm
@@ -126,3 +128,19 @@ def _try(f, default=None):
         return f()
     except Exception:
         return default
+
+
+class Identities(collections.abc.Iterator):
+    def __init__(self):
+        self._user_agents = UserAgent()
+        self._proxies = cycle([
+            p
+            for p in get_proxies()
+            if p.anonymity == 'elite proxy'
+        ])
+
+    def __next__(self):
+        return SimpleNamespace(
+            user_agent=self._user_agents.random,
+            **next(self._proxies).__dict__,
+        )
