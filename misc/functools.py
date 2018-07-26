@@ -16,3 +16,15 @@ class decorable:
 
     def after(self, *fs):
         return self.__class__(compose(*reversed(fs), self._function))
+
+
+def kwargs(f):
+    parameters = inspect.signature(f).parameters.values()
+    @wraps(f)
+    def _kwargs(**user_kwargs):
+        _ = (
+            (p.name, user_kwargs.get(p.name, p.default))
+            for p in parameters
+        )
+        return f(**dict((k, v) for k, v in _ if v is not inspect._empty))
+    return _kwargs
