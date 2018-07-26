@@ -13,6 +13,9 @@ tornado = "<5"
 tqdm = "*"
 parsel = "*"
 toolz = "*"
+fake-useragent = "*"
+python-dateutil = "*"
+dateparser = "*"
 
 [dev-packages]
 

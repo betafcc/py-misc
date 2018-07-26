@@ -94,3 +94,18 @@ async def get_all(urls,
         return result
 
     return await asyncio.gather(*map(mapper, urls))
+
+
+@agnostic
+async def get_proxies():
+    document = await scrape('https://www.sslproxies.org')
+
+    keys = 'ip port code country anonymity google https last_checked'
+    keys = keys.split()
+
+    acc = []
+    trs = document.css('#proxylisttable tr')[1:-1]
+    for tr in trs:
+        tds = (td.css('::text').extract_first() for td in tr.css('td'))
+        acc.append(dict(zip(keys, tds)))
+    return acc
