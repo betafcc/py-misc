@@ -7,6 +7,7 @@ import tqdm
 import aiohttp
 import dateparser
 from parsel import Selector
+from fake_useragent import UserAgent
 
 from .asynctools import agnostic
 
