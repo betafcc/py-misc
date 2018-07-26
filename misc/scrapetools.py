@@ -1,4 +1,5 @@
 import asyncio
+from types import SimpleNamespace
 
 import tqdm
 import aiohttp
@@ -104,15 +105,17 @@ async def get_proxies():
     keys = 'ip port code country anonymity google https last_checked'
     keys = keys.split()
 
+    y_n = {'yes': True, 'no': False}
+
     acc = []
     trs = document.css('#proxylisttable tr')[1:-1]
     for tr in trs:
         tds = (td.css('::text').extract_first() for td in tr.css('td'))
-        d = dict(zip(keys, tds))
+        d = SimpleNamespace(**dict(zip(keys, tds)))
 
-        d['google'] = _try(lambda: y_n[d['google']])
-        d['https'] = _try(lambda: y_n[d['https']])
-        d['last_checked'] = _try(lambda: dateparser.parse(d['last_checked']))
+        d.google = _try(lambda: y_n[d.google])
+        d.https = _try(lambda: y_n[d.https])
+        d.last_checked = _try(lambda: dateparser.parse(d.last_checked))
 
         acc.append(d)
     return acc
