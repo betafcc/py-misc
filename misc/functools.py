@@ -1,4 +1,5 @@
-from functools import update_wrapper
+import inspect
+from functools import wraps, update_wrapper
 
 from toolz.functoolz import compose
 
