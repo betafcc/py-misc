@@ -19,21 +19,15 @@ class decorable:
         return self.__class__(compose(*reversed(fs), self._function))
 
 
-def before(process_arguments):
+def before(*process_arguments):
     def _before(f):
-        @wraps(f)
-        def __before(*args, **kwargs):
-            return f(process_arguments(*args, **kwargs))
-        return __before
+        return decorable(f).before(*process_arguments)._function
     return _before
 
 
-def after(process_result):
+def after(*process_result):
     def _after(f):
-        @wraps(f)
-        def __after(*args, **kwargs):
-            return process_result(f(*args, **kwargs))
-        return __after
+        return decorable(f).after(*process_result)._function
     return _after
 
 
