@@ -4,10 +4,12 @@ from functools import wraps
 from threading import Thread
 from collections.abc import Awaitable
 
-from .functools import after
 
-
-task_creator = after(asyncio.create_task)
+def task_function(coroutine_function, *, loop=None):
+    @wraps(coroutine_function)
+    def _task_function(*args, **kwargs):
+        return asyncio.ensure_future(coroutine_function(*args, **kwargs), loop=loop)
+    return _task_function
 
 
 def sync(f, loop=None):
