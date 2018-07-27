@@ -4,6 +4,11 @@ from functools import wraps
 from threading import Thread
 from collections.abc import Awaitable
 
+from .functools import after
+
+
+task_creator = after(asyncio.create_task)
+
 
 def sync(f, loop=None):
     @wraps(f)
