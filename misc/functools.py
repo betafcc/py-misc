@@ -19,6 +19,24 @@ class decorable:
         return self.__class__(compose(*reversed(fs), self._function))
 
 
+def before(process_arguments):
+    def _before(f):
+        @wraps(f)
+        def __before(*args, **kwargs):
+            return f(process_arguments(*args, **kwargs))
+        return __before
+    return _before
+
+
+def after(process_result):
+    def _after(f):
+        @wraps(f)
+        def __after(*args, **kwargs):
+            return process_result(f(*args, **kwargs))
+        return __after
+    return _after
+
+
 def kwargs(f):
     parameters = inspect.signature(f).parameters.values()
     @wraps(f)
