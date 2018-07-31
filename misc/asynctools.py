@@ -4,6 +4,17 @@ from functools import wraps
 from threading import Thread
 from collections.abc import Awaitable
 
+from tenacity import AsyncRetrying
+
+
+def async_retry(*dargs, **dkw):
+    if len(dargs) == 1 and callable(dargs[0]):
+        return async_retry()(dargs[0])
+    else:
+        def wrap(f):
+            return AsyncRetrying(*dargs, **dkw).wraps(f)
+        return wrap
+
 
 def task_function(coroutine_function, *, loop=None):
     @wraps(coroutine_function)

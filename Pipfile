@@ -18,6 +18,7 @@ python-dateutil = "*"
 dateparser = "*"
 aiodns = "*"
 ipywidgets = "*"
+tenacity = "*"
 
 [dev-packages]
 
