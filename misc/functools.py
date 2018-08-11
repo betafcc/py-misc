@@ -5,7 +5,7 @@ from toolz.functoolz import compose
 
 
 class profunction:
-    def __init__(self, function):
+    def __init__(self, function=lambda arg: arg):
         self._function = function
         update_wrapper(self, function)
 
