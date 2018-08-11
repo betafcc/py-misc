@@ -4,7 +4,7 @@ from functools import wraps, update_wrapper
 from toolz.functoolz import compose
 
 
-class decorable:
+class profunction:
     def __init__(self, function):
         self._function = function
         update_wrapper(self, function)
@@ -21,13 +21,13 @@ class decorable:
 
 def before(*process_arguments):
     def _before(f):
-        return decorable(f).before(*process_arguments)._function
+        return profunction(f).before(*process_arguments)._function
     return _before
 
 
 def after(*process_result):
     def _after(f):
-        return decorable(f).after(*process_result)._function
+        return profunction(f).after(*process_result)._function
     return _after
 
 
