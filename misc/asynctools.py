@@ -11,9 +11,7 @@ def async_retry(*dargs, **dkw):
     if len(dargs) == 1 and callable(dargs[0]):
         return async_retry()(dargs[0])
     else:
-        def wrap(f):
-            return AsyncRetrying(*dargs, **dkw).wraps(f)
-        return wrap
+        return AsyncRetrying(*dargs, **dkw).wraps
 
 
 def task_function(coroutine_function, *, loop=None):
