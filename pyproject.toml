@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "py-misc"
+version = "0.1.0"
+description = ""
+authors = ["Beta Faccion <betafcc@gmail.com>"]
+
+[tool.poetry.dependencies]
+aiohttp = "*"
+tqdm = "*"
+parsel = "*"
+toolz = "*"
+fake-useragent = "*"
+python-dateutil = "*"
+dateparser = "*"
+tenacity = "*"
+
+[tool.poetry.dev-dependencies]
+ipython = "*"
+tornado = "<5"
+jupyterlab = "*"
+"flake8" = "*"
+mypy = "*"

@@ -1,21 +1,19 @@
 SRC := misc
 JUPYTER_ROOT := notebooks
 
-
 init:
-	pipenv install --skip-lock
-	pipenv install --dev --skip-lock
+	poetry install
 
-	pipenv run jupyter nbextension enable --py widgetsnbextension --sys-prefix
-	pipenv run jupyter labextension install @jupyter-widgets/jupyterlab-manager
+	poetry run jupyter nbextension enable --py widgetsnbextension --sys-prefix
+	poetry run jupyter labextension install @jupyter-widgets/jupyterlab-manager
 
 
 notebook:
-	cd $(JUPYTER_ROOT) && pipenv run jupyter notebook
+	cd $(JUPYTER_ROOT) && poetry run jupyter notebook
 
 
 lab:
-	cd $(JUPYTER_ROOT) && pipenv run jupyter lab
+	cd $(JUPYTER_ROOT) && poetry run jupyter lab
 
 
 validate:
@@ -23,8 +21,8 @@ validate:
 
 
 lint:
-	pipenv run flake8
+	poetry run flake8
 
 
 typecheck:
-	pipenv run mypy --ignore-missing-imports $(SRC)
+	poetry run mypy --ignore-missing-imports $(SRC)
