@@ -18,6 +18,7 @@ def task_function(coroutine_function, *, loop=None):
     @wraps(coroutine_function)
     def _task_function(*args, **kwargs):
         return asyncio.ensure_future(coroutine_function(*args, **kwargs), loop=loop)
+
     return _task_function
 
 
@@ -28,6 +29,7 @@ def sync(f, loop=None):
         if loop is None:
             return asyncio.run(coro)
         return loop.run_until_complete(coro)
+
     return _sync
 
 
@@ -42,6 +44,7 @@ def agnostic(f):
             return result
         except RuntimeError:
             return asyncio.run(result)
+
     return _agnostic
 
 
@@ -49,6 +52,7 @@ def flatten(f):
     @wraps(f)
     def _flatten(*args, **kwargs):
         return flat(f(*args, **kwargs))
+
     return _flatten
 
 
@@ -83,7 +87,7 @@ class AsCompletedQueue:
 
     def get_nowait(self):
         if not self._qsize:
-            raise asyncio.QueueEmpty('No more futures to give')
+            raise asyncio.QueueEmpty("No more futures to give")
         else:
             self._qsize -= 1
             return self._wait_for_one()

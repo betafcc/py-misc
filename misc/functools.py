@@ -22,22 +22,23 @@ class profunction:
 def before(*process_arguments):
     def _before(f):
         return profunction(f).before(*process_arguments)._function
+
     return _before
 
 
 def after(*process_result):
     def _after(f):
         return profunction(f).after(*process_result)._function
+
     return _after
 
 
 def kwargs(f):
     parameters = inspect.signature(f).parameters.values()
+
     @wraps(f)
     def _kwargs(**user_kwargs):
-        _ = (
-            (p.name, user_kwargs.get(p.name, p.default))
-            for p in parameters
-        )
+        _ = ((p.name, user_kwargs.get(p.name, p.default)) for p in parameters)
         return f(**dict((k, v) for k, v in _ if v is not inspect._empty))
+
     return _kwargs

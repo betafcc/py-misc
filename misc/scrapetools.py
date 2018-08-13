@@ -13,9 +13,9 @@ from .asynctools import agnostic
 
 @agnostic
 async def scrape(url, *args, **kwargs):
-    if isinstance(url, str) and url.startswith('http'):
-        if 'session' not in kwargs:
-            kwargs.update(session={'raise_for_status': True})
+    if isinstance(url, str) and url.startswith("http"):
+        if "session" not in kwargs:
+            kwargs.update(session={"raise_for_status": True})
 
         response = await get(url, *args, **kwargs)
         html = response.body.decode(response.charset)
@@ -40,25 +40,24 @@ async def request(method, url, *args, session=None, **kwargs):
         return response
 
 
-locals().update(**{
-    method : partial(request, method)
-    for method in ['get', 'post', 'put']
-})
+locals().update(
+    **{method: partial(request, method) for method in ["get", "post", "put"]}
+)
 
 
 @agnostic
 async def get_proxies():
-    document = await scrape('https://www.sslproxies.org')
+    document = await scrape("https://www.sslproxies.org")
 
-    keys = 'ip port code country anonymity google https last_checked'
+    keys = "ip port code country anonymity google https last_checked"
     keys = keys.split()
 
-    y_n = {'yes': True, 'no': False}
+    y_n = {"yes": True, "no": False}
 
     acc = []
-    trs = document.css('#proxylisttable tr')[1:-1]
+    trs = document.css("#proxylisttable tr")[1:-1]
     for tr in trs:
-        tds = (td.css('::text').extract_first() for td in tr.css('td'))
+        tds = (td.css("::text").extract_first() for td in tr.css("td"))
         d = SimpleNamespace(**dict(zip(keys, tds)))
 
         d.google = _try(lambda: y_n[d.google])
@@ -79,14 +78,11 @@ def _try(f, default=None):
 class Identities(collections.abc.Iterator):
     def __init__(self):
         self._user_agents = UserAgent()
-        self._proxies = cycle([
-            p
-            for p in get_proxies()
-            if p.anonymity == 'elite proxy'
-        ])
+        self._proxies = cycle(
+            [p for p in get_proxies() if p.anonymity == "elite proxy"]
+        )
 
     def __next__(self):
         return SimpleNamespace(
-            user_agent=self._user_agents.random,
-            **next(self._proxies).__dict__,
+            user_agent=self._user_agents.random, **next(self._proxies).__dict__
         )
