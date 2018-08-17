@@ -19,6 +19,15 @@ class profunction:
         return self.__class__(compose(*reversed(fs), self._function))
 
 
+def decorate(decorator):
+    def _decorate(to_wrap):
+        return wraps(to_wrap)(
+            lambda *args, **kwargs: decorator(to_wrap, *args, **kwargs)
+        )
+
+    return _decorate
+
+
 def before(*process_arguments):
     def _before(f):
         return profunction(f).before(*process_arguments)._function
