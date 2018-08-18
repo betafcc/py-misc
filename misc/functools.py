@@ -43,6 +43,9 @@ def after(*process_result):
 
 
 def kwargs(f):
+    '''
+    Coerces any function into a 'key-word only' call signature
+    '''
     parameters = inspect.signature(f).parameters.values()
 
     @wraps(f)
@@ -54,6 +57,15 @@ def kwargs(f):
 
 
 def match(test, obj, cases):
+    '''
+    Tests for `test` in `cases`, then apply `obj` to it
+
+    >>> match(isinstace, 10. {
+    ...     str: lambda v: 'str',
+    ...     int: lambda v: 'int',
+    ... })
+    'int'
+    '''
     for type_, handler in cases.items():
         if test(obj, type_):
             return handler(obj)
