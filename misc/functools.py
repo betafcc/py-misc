@@ -51,3 +51,11 @@ def kwargs(f):
         return f(**dict((k, v) for k, v in _ if v is not inspect._empty))
 
     return _kwargs
+
+
+def match(test, obj, cases):
+    for type_, handler in cases.items():
+        if test(obj, type_):
+            return handler(obj)
+    else:
+        raise TypeError
