@@ -4,6 +4,67 @@ from functools import wraps, update_wrapper
 from toolz.functoolz import compose
 
 
+class infix:
+    """
+    Makes a function 'infix' eg:
+
+    >>> @infix
+    ... def power(x, n):
+    ...     return x ** n
+
+    >>> 2 |power| 3
+    8
+
+
+    Can be partially aplied:
+    >>> cube = power|3
+    >>> cube(2)
+    8
+
+    >>> base2 = 2|power
+    >>> base2(3)
+    8
+
+    Useful with higher-order functions:
+    >>> list(map(power|3, [1, 2, 3, 4, 5]))
+    [1, 8, 27, 64, 125]
+    """
+
+    def __init__(self, function):
+        self._function = function
+
+    def __call__(self, *args, **kwargs):
+        return self._function(*args, **kwargs)
+
+    def __ror__(self, left_argument):
+        return left_section(self._function, left_argument)
+
+    def __or__(self, right_argument):
+        return right_section(self._function, right_argument)
+
+
+class left_section:
+    def __init__(self, function, left_argument):
+        self._function = function
+        self._left_argument = left_argument
+
+    def __call__(self, *args, **kwargs):
+        return self._function(self._left_argument, *args, **kwargs)
+
+    __or__ = __call__
+
+
+class right_section:
+    def __init__(self, function, right_argument):
+        self._function = function
+        self._right_argument = right_argument
+
+    def __call__(self, arg, *args, **kwargs):
+        return self._function(arg, self._right_argument, *args, **kwargs)
+
+    __ror__ = __call__
+
+
 class profunction:
     def __init__(self, function=lambda arg: arg):
         self._function = function
@@ -43,9 +104,9 @@ def after(*process_result):
 
 
 def kwargs(f):
-    '''
+    """
     Coerces any function into a 'key-word only' call signature
-    '''
+    """
     parameters = inspect.signature(f).parameters.values()
 
     @wraps(f)
@@ -57,7 +118,7 @@ def kwargs(f):
 
 
 def match(test, obj, cases):
-    '''
+    """
     Tests for `test` in `cases`, then apply `obj` to it
 
     >>> match(isinstace, 10. {
@@ -65,7 +126,7 @@ def match(test, obj, cases):
     ...     int: lambda v: 'int',
     ... })
     'int'
-    '''
+    """
     for type_, handler in cases.items():
         if test(obj, type_):
             return handler(obj)
